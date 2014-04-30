@@ -909,13 +909,67 @@ public class Main extends javax.swing.JFrame {
 			int s5mkstart = -1;
 			int s5mkend = -1;
 			
+			//设置一个 变量s1Mp01Flag用于判断一卖平01策略是否是一直持续
+			//换而言之，价格是否是一直在上涨，如果价格一直在上涨，表示一直处在一卖平01策略中 (标记为s1Mp01Flag = 1)
+			//如果价格偶然间下滑，没有持续在N+X1+Y1一直上行，标记为s1Mp01Flag = -1
+			
 			for (int k=0;k<list.size();k++) {
 				Object[] objs = list.get(k);
 				String time = (String) objs[0];
 				Double p = (Double) objs[1];
 				
 				//一个list其实代表一个周期，所以，可以进行适当匹配，一旦匹配到某一策略就进行下一次循环
-			
+				
+				Double currPrice = -1.0;
+				Double prePrice = -1.0;
+				
+				if (k > 0 && k < list.size() - 1) {
+					currPrice = (Double)list.get(k)[1];
+					prePrice = (Double)list.get(k-1)[1];
+					
+					//一卖平01
+					if (p >= tempN + s1Mp01X1 + s1Mp01Y1 * 0.8) {
+						result.append("策略名称：一卖平01  策略编号: 01SU01 开仓时间：" + time + " 开仓价格：" + (tempN + s1Mp01X1 + s1Mp01Y1 * 0.8) + "\n");
+						s1Mp01Y1 = s1Mp01Y1 * 2;
+						s5mkstart = k;
+						
+						if (s5mkstart != -1 && s5mkend != -1) {
+							int min = Math.min(s5mkstart, s5mkend);
+							int max = Math.max(s5mkstart, s5mkend);
+							
+							List<Object[]> tempL1 = list.subList(min, max + 1);
+							List<Double> tempL2 = new ArrayList<Double>();
+							for (Object[] o : tempL1) {
+								tempL2.add((Double)o[1]);
+							}
+							
+							double maxPrice = maxPrice(tempL2);
+							result.append("策略名称：五买开  策略编号: 05BP01  开仓时间：" + time + " 开仓价格：" + (maxPrice + s5mkZ2) + "\n");
+							
+						}
+						
+						continue;
+					}
+					
+					if (p >= tempN + s1mkX1 && currPrice > prePrice) {
+						result.append("策略名称：一买开  策略编号: 01BP01 开仓时间：" + time + " 开仓价格：" + (tempN + s1mkX1) + "\n");
+						s5mkend = k;
+						continue;
+					}
+					
+					
+				}
+				
+				
+				//=======================以下代码需要整理=============================
+				
+				/*//一买开 (价格上升，到达这个值触发了这个策略)
+				if (p >= tempN + s1mkX1 && k >= 1 && k < list.size() - 1 && (Double)list.get(k)[1] > (Double)list.get(k - 1)[1]) {
+					result.append("策略名称：一买开  策略编号: 01BP01 开仓时间：" + time + " 开仓价格：" + (tempN + s1mkX1) + "\n");
+					s5mkend = k;
+					//continue;
+				}
+				
 				//一卖平01
 				if (p >= tempN + s1Mp01X1 + s1Mp01Y1 * 0.8) {
 					result.append("策略名称：一卖平01  策略编号: 01SU01 开仓时间：" + time + " 开仓价格：" + (tempN + s1Mp01X1 + s1Mp01Y1 * 0.8) + "\n");
@@ -939,12 +993,7 @@ public class Main extends javax.swing.JFrame {
 					
 				//	continue;
 				}
-				//一买开
-				if (p >= tempN + s1mkX1 && p < tempN + s1Mp01X1 + s1Mp01Y1 * 0.8) {
-					result.append("策略名称：一买开  策略编号: 01BP01 开仓时间：" + time + " 开仓价格：" + (tempN + s1mkX1) + "\n");
-					s5mkend = k;
-					//continue;
-				}
+				
 				//二买平02
 				if (p >= tempN + s2mp02X1 && p < tempN + s1Mp01X1 + s1Mp01Y1 * 0.8) {
 					result.append("策略名称：二买平02  策略编号: 02BU02  平仓时间：" + time + " 平仓价格：" + (tempN - s2mp02X1) + "\n");
@@ -1011,9 +1060,9 @@ public class Main extends javax.swing.JFrame {
 					result.append("策略名称：二卖开  策略编号: 02SP01  开仓时间：" + time + " 开仓价格：" + (tempN - s2MkX2) + "\n");
 					s4Mkstart = k;
 					continue;
-				}
+				}*/
 				
-				
+				//===============================整理结束=======================================
 				
 				jTextArea1.append(result.toString());
 				result = new StringBuilder();
